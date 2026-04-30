@@ -20,6 +20,28 @@ class RandomVariable:
         raise NotImplementedError
 
 
+class Bernoulli(RandomVariable):
+    """A RV following a Bernoulli Distribution
+    
+    The RV can only take on values 0, 1 based on a success or fail.
+    """
+
+    def __init__(self, theta: float) -> None:
+        self.theta = theta
+
+    def sample(self) -> int:
+        """Return one draw from the distribution"""
+
+        if random.random() < theta:  # win
+            return 1
+        return 0
+    
+    def pmf(self) -> float:
+        """Return the probability of X = 1"""
+        return self.theta
+
+
+
 class Binomial(RandomVariable):
     """A RV following a Binomial Distribution
 
@@ -32,15 +54,18 @@ class Binomial(RandomVariable):
         self.theta = theta
 
     def sample(self) -> int:
-        """Return one draw from the distribution"""
-        count = 0
+        """Return one draw from the distribution.
+        
+        Analogous to the amount of successful berounoulli samples 
+        within <self.n> trials.
+        """
+        count, bernoulli = 0, Bernoulli(self.theta)
         for i in range(self.n):
-            if random.random() < self.theta:
-                count += 1
+            count += bernoulli.sample()
         return count
 
     def pmf(self, k: int) -> float:
-        """Return the probability of X = k."""
+        """Return the probability of X = k"""
         combinations_of_k = math.comb(self.n, k)
         losing_the_rest = (1 - self.theta) ** (self.n - k)
         winning_k = self.theta**k
