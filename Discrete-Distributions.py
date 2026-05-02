@@ -2,6 +2,7 @@ import math
 import random
 from matplotlib import pyplot as plt
 import numpy as np
+import scipy.stats as norm
 
 
 class RandomVariable:
@@ -116,6 +117,29 @@ class Poisson(RandomVariable):
         """The expected value lam which maximizes the probability X = k
         is when lam is that value."""
         return k
+
+    class Normal(RandomVariable):
+        """A Continuous RV following a Normal Distribution
+
+        Public Attributes:
+            - mew: The average
+            - gamma: The variation
+        """
+
+        mew: float
+        gamma: float
+
+        def __init__(self, mu: float = 0, sigma: float = 1):
+            self.mu = mu
+            self.sigma = sigma
+
+        def sample(self) -> float:
+            """Return a random draw"""
+            return np.random.normal(self.mu, self.sigma)
+
+        def pmf(self, z: float) -> float:
+            """Return the probability of X = z"""
+            return norm.pdf(z, self.mu, self.sigma)
 
 
 if __name__ == "__main__":
