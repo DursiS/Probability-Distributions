@@ -23,7 +23,7 @@ class RandomVariable:
 
 class Bernoulli(RandomVariable):
     """A RV following a Bernoulli Distribution
-    
+
     The RV can only take on values 0, 1 based on a success or fail.
     """
 
@@ -33,14 +33,13 @@ class Bernoulli(RandomVariable):
     def sample(self) -> int:
         """Return one draw from the distribution"""
 
-        if random.random() < theta:  # win
+        if random.random() < self.theta:  # win
             return 1
         return 0
-    
+
     def pmf(self) -> float:
         """Return the probability of X = 1"""
         return self.theta
-
 
 
 class Binomial(RandomVariable):
@@ -56,14 +55,39 @@ class Binomial(RandomVariable):
 
     def sample(self) -> int:
         """Return one draw from the distribution.
-        
-        Analogous to the amount of successful berounoulli samples 
+
+        Analogous to the amount of successful bernoulli samples
         within <self.n> trials.
         """
         count, bernoulli = 0, Bernoulli(self.theta)
         for i in range(self.n):
             count += bernoulli.sample()
         return count
+
+    def batch_sample(self, k: int) -> float:
+        """Return the average of <k> samples
+        Batching helps reduce variance
+
+        Precondition: k > 0
+        """
+        total = 0
+        for i in range(k):
+            total += self.sample()
+        return total / k
+
+    def expectation(self) -> float:
+        """Return the expected value of this RV given
+        <self.n> and <self.theta>"""
+        total = 0
+        for k in range(self.n):
+            total += k * self.pmf(k)
+        return total
+
+    def variance(self) -> float:
+        """Return the variance of this RV given
+        <self.n> and <self.theta>"""
+        x2 = BinomialSquared(self.n, self.theta)
+        return x2.expectation() - (self.expectation() ** 2)
 
     def pmf(self, k: int) -> float:
         """Return the probability of X = k"""
@@ -75,6 +99,18 @@ class Binomial(RandomVariable):
     def maximize(self, k: int) -> float:
         """Differentiate pmf(k) and solve for what theta maximizes it."""
         raise NotImplementedError
+
+
+class BinomialSquared(Binomial):
+    """A RV following a Binomial Distribution whose values are squared
+    Halper to Binomial.variance()
+    """
+
+    def __init__(self, n: int, theta: float) -> None:
+        super().__init__(n, theta)
+
+    def sample(self) -> int:
+        return super().sample() ** 2
 
 
 class Geometric(RandomVariable):
