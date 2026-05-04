@@ -38,10 +38,7 @@ class BinomialCentralLimit(Binomial):
         return lst
 
     def get_density(self, nx: int, dx: float, x: list[float]) -> list[float]:
-        """Helper to get_average_distribution
-
-        Return the list of density values to plot this distribution.
-        """
+        """Return the list of density values to plot this distribution."""
         bins, lst = np.arange(-3, 3, dx), []
 
         d1 = bins[0]
