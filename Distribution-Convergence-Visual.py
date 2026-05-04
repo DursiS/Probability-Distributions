@@ -27,9 +27,9 @@ class BinomialCentralLimit(Binomial):
         return (mean - mu) / (std / (k**0.5))
 
     def get_samples(self, nx: int, k: int) -> list[float]:
-        """Helper to get_points.
+        """Helper to get_average_distribution
 
-        Return the list of x values to plot this distribution.
+        Return a list of <nx> batch samples values of size <k>.
         """
 
         lst = []
@@ -38,10 +38,9 @@ class BinomialCentralLimit(Binomial):
         return lst
 
     def get_density(self, nx: int, dx: float, x: list[float]) -> list[float]:
-        """Helper to get_points.
+        """Helper to get_average_distribution
 
-        Return the list of y values to plot this distribution of <nx> samples,
-        as the density of each value in <x> in <dx> bins.
+        Return the list of density values to plot this distribution.
         """
         bins, lst = np.arange(-3, 3, dx), []
 
@@ -54,29 +53,41 @@ class BinomialCentralLimit(Binomial):
             lst.append(freq / len(x))  # its probability
         return lst
 
-    def get_average_distribution(
-        self, nx: int, k: int, dx: float
-    ) -> tuple[list[float], list[float]]:
-        """Plot the points of the mean distribution of <nx>
-        distributions of <k> size batch samples.
+    def get_average_distribution(self, nx: int, k: int, dx: float) -> list[float]:
+        """Return a list of the densities of <nx> batch samples
+        of size <k>. To be represented as a density histogram of width <dx>."""
 
-        To be represented as a density
-        histogram of width <dx>.
-        """
-        x = self.get_samples(nx, k)
-        y = self.get_density(nx, dx, x)
-        return x, y
+        samples = self.get_samples(nx, k)
+        return self.get_density(nx, dx, samples)
 
 
 if __name__ == "__main__":
-    n = 1000
+    n = 500
+    _nx = 1000  # Number of samples in the batches
     _theta = 1 / 2
-    _k = 1  # Batch sample size
+    _k = 10  # Batch sample size
     _dx = 0.1  # Bin width
-    _nx = 1000
 
     b1 = BinomialCentralLimit(n, _theta)
-    x, y = b1.get_average_distribution(_nx, _k, _dx)
-    print(x)
-    plt.hist(x, bins=30, density=True)
-    plt.show()
+
+    if False:
+
+        d = b1.get_samples(1000, 50)
+        plt.hist(d, bins=(math.ceil(6 / _dx)), density=True)
+        plt.show()
+
+    if True:  # Visualize how it converges for bigger samples
+
+        n1, n2, n3, n4 = 100, 250, 500, 1000
+        d1 = b1.get_samples(n1, _k)
+        d2 = b1.get_samples(n2, _k)
+        d3 = b1.get_samples(n3, _k)
+        d4 = b1.get_samples(n4, _k)
+        data = [d1, d2, d3, d4]
+        labels = [n1, n2, n3, n4]
+
+        fig, axs = plt.subplots(2, 2, figsize=(8, 6))
+        for ax, data, label in zip(axs.flatten(), data, labels):
+            ax.hist(data, bins=30, density=True, label=f"")
+            ax.set_title(f"Batch Samples: {label}, Size: {_k}")
+        plt.show()
