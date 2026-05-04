@@ -1,6 +1,7 @@
 from Distributions_Visual import Binomial
 import matplotlib.pyplot as plt
 import numpy as np
+import math
 
 
 class BinomialCentralLimit(Binomial):
@@ -19,50 +20,63 @@ class BinomialCentralLimit(Binomial):
 
         Precondition: k > 0
         """
-        mean = self.batch_sample(k) / k
+        mean = self.batch_sample(k)
         mu = self.expectation()
-        sigma = self.variance()
+        std = round(self.variance() ** 0.5, 8)
 
-        return (mean - self.n * mu) / (sigma * (self.n ** (1 / 2)))
+        return (mean - mu) / (std / (k**0.5))
 
-    def get_points(self, k: int, nx: int, dx: float) -> tuple[list[int], list[float]]:
-        """Plot the points of a distribution of <nx> samples
-        of size <k> of this RV with matplotlib.
-        To be represented as a density histogram of width <dx>.
+    def get_samples(self, nx: int, k: int) -> list[float]:
+        """Helper to get_points.
+
+        Return the list of x values to plot this distribution.
         """
-        x, y = [], []
-        bins = np.arange(-self.n, self.n, dx)
 
+        lst = []
         for i in range(nx):
-            x.append(self.mean_sample(k))
+            lst.append(self.mean_sample(k))
+        return lst
 
-        for j in range(nx - 1):
+    def get_density(self, nx: int, dx: float, x: list[float]) -> list[float]:
+        """Helper to get_points.
+
+        Return the list of y values to plot this distribution of <nx> samples,
+        as the density of each value in <x> in <dx> bins.
+        """
+        bins, lst = np.arange(-3, 3, dx), []
+
+        d1 = bins[0]
+        for d2 in bins[1:]:  # "For every bin..."
             freq = 0
             for point in x:
-                if bins[j] < point <= bins[j + 1]:
+                if d1 < point <= d2:
                     freq += 1
-            y.append(freq / ((nx * k) * dx))
+            lst.append(freq / len(x))  # its probability
+        return lst
 
+    def get_average_distribution(
+        self, nx: int, k: int, dx: float
+    ) -> tuple[list[float], list[float]]:
+        """Plot the points of the mean distribution of <nx>
+        distributions of <k> size batch samples.
+
+        To be represented as a density
+        histogram of width <dx>.
+        """
+        x = self.get_samples(nx, k)
+        y = self.get_density(nx, dx, x)
         return x, y
 
 
 if __name__ == "__main__":
-    n = 100
-    n1, n2, n3, n4 = 1, 10, 50, 100
+    n = 1000
     _theta = 1 / 2
-    _k = 20
-    _dx = 1
+    _k = 1  # Batch sample size
+    _dx = 0.1  # Bin width
+    _nx = 1000
 
     b1 = BinomialCentralLimit(n, _theta)
-
-    plt.subplot(1, 2, 1)
-    # plt.subplot(1, 2, 2)
-    # plt.subplot(1, 2, 3)
-    # plt.subplot(1, 2, 4)
-
-    x1, y1 = b1.get_points(_k, n1, _dx)
-    plt.plot(x1, y1)
-
-    # x2, y2 = b1.get_points(_k, n2, _dx)
-    # x3, y3 = b1.get_points(_k, n3, _dx)
-    # x4, y4 = b1.get_points(_k, n4, _dx)
+    x, y = b1.get_average_distribution(_nx, _k, _dx)
+    print(x)
+    plt.hist(x, bins=30, density=True)
+    plt.show()
