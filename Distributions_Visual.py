@@ -78,16 +78,15 @@ class Binomial(RandomVariable):
     def expectation(self) -> float:
         """Return the expected value of this RV given
         <self.n> and <self.theta>"""
-        total = 0
-        for k in range(self.n):
-            total += k * self.pmf(k)
-        return total
+        return self.n * self.theta
 
     def variance(self) -> float:
-        """Return the variance of this RV given
-        <self.n> and <self.theta>"""
-        x2 = BinomialSquared(self.n, self.theta)
-        return x2.expectation() - (self.expectation() ** 2)
+        """Return the approximation to the variance of this Binomial RV."""
+        x = [self.sample() for i in range(self.n)]
+        mean = sum(x) / self.n
+        x2 = [i**2 for i in x]
+        mean_x2 = sum(x2) / self.n
+        return mean_x2 - (mean**2)
 
     def pmf(self, k: int) -> float:
         """Return the probability of X = k"""
